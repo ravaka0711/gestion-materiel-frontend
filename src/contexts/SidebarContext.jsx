@@ -1,25 +1,47 @@
-import { createContext, useState, useContext } from 'react'
-
-/**
- * EXPLICATION :
- * Ce Context gère l'état du sidebar (ouvert/fermé)
- * Permet à n'importe quel composant de contrôler le sidebar
- */
+import { createContext, useState, useContext, useEffect } from 'react'
 
 const SidebarContext = createContext()
 
 export function SidebarProvider({ children }) {
-  // État : true = ouvert, false = fermé
-  const [isOpen, setIsOpen] = useState(false)
+  // Sur desktop : ouvert par défaut, sur mobile : fermé
+  const [isOpen, setIsOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024
+    }
+    return true
+  })
 
-  // Basculer l'état
-  const toggle = () => setIsOpen(prev => !prev)
+  // Gère le redimensionnement : adapte le comportement selon la taille
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        // Sur desktop, on garde l'état actuel (ne force pas l'ouverture)
+      } else {
+        // Sur mobile, on ferme automatiquement
+        setIsOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const toggle = () => {
+    setIsOpen(prev => {
+      console.log('Toggle sidebar - Avant:', prev, 'Après:', !prev)
+      return !prev
+    })
+  }
   
-  // Fermer explicitement
-  const close = () => setIsOpen(false)
+  const close = () => {
+    console.log('Fermer sidebar')
+    setIsOpen(false)
+  }
   
-  // Ouvrir explicitement
-  const open = () => setIsOpen(true)
+  const open = () => {
+    console.log('Ouvrir sidebar')
+    setIsOpen(true)
+  }
 
   const value = {
     isOpen,
@@ -35,7 +57,6 @@ export function SidebarProvider({ children }) {
   )
 }
 
-// Hook personnalisé pour utiliser le sidebar
 export function useSidebar() {
   const context = useContext(SidebarContext)
   if (!context) {

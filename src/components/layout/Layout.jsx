@@ -1,40 +1,38 @@
-import Sidebar from './Sidebar'
+import { useState, useEffect } from 'react'
+import { useSidebar } from '../../contexts/SidebarContext'
 import Header from './Header'
+import Sidebar from './Sidebar'
 
-/**
- * EXPLICATION :
- * Layout principal qui combine tous les éléments de structure
- * 
- * COMPOSITION :
- * - Sidebar : navigation latérale
- * - Header : barre supérieure
- * - Main : contenu de la page (children)
- * 
- * UTILISATION :
- * Wrapper toutes les pages authentifiées avec ce Layout
- * 
- * Exemple :
- * <Layout pageTitle="Gestion des Matériels">
- *   <MaterielsPage />
- * </Layout>
- * 
- * RESPONSIVE :
- * - Le margin-left (lg:ml-64) compense la largeur du sidebar sur desktop
- * - Sur mobile, pas de margin car le sidebar est en overlay
- */
+export default function Layout({ pageTitle = 'Dashboard', children }) {
+  const { isOpen } = useSidebar()
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
 
-export default function Layout({ children, pageTitle = 'Dashboard' }) {
+  // Détecter les changements de taille d'écran
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Calculer la marge gauche
+  const marginLeft = isDesktop ? (isOpen ? '256px' : '80px') : '0'
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar de navigation */}
+      {/* Sidebar */}
       <Sidebar />
       
-      {/* Conteneur principal avec margin pour le sidebar (desktop uniquement) */}
-      <div className="min-h-screen transition-all duration-300 lg:ml-64">
-        {/* Header avec titre de la page */}
+      {/* Contenu principal qui s'adapte à la largeur du sidebar */}
+      <div 
+        className="transition-all duration-300 ease-in-out"
+        style={{ marginLeft }}
+      >
+        {/* Header avec titre dynamique */}
         <Header pageTitle={pageTitle} />
         
-        {/* Contenu de la page */}
+        {/* Zone de contenu des pages */}
         <main className="p-6">
           {children}
         </main>

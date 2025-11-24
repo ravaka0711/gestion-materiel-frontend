@@ -9,33 +9,15 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 // Import des pages
 import Dashboard from './components/pages/Dashboard'
+import DirecteurDashboardPage from './components/pages/DirecteurDashboardPage'
 import MaintenancesPage from './components/pages/MaintenancesPage'
 import MaterielsPage from './components/pages/MaterielsPage'
 import LogicielsPage from './components/pages/LogicielsPage'
 import AgencesPage from './components/pages/AgencesPage'
 import RegionsPage from './components/pages/RegionsPage'
+import UtilisateursPage from './components/pages/UtilisateursPage'
 
 import './App.css'
-
-/**
- * EXPLICATION :
- * App principal avec toute la structure de routing
- * 
- * PROVIDERS :
- * 1. ThemeProvider : gère le dark mode globalement
- * 2. SidebarProvider : gère l'état du sidebar globalement
- * 3. Router : gère la navigation
- * 
- * ROUTES :
- * - Routes publiques : /, /login
- * - Routes protégées : toutes les pages après login, wrappées dans Layout
- * 
- * LAYOUT :
- * Toutes les pages authentifiées utilisent le Layout qui inclut :
- * - Sidebar
- * - Header
- * - Contenu de la page
- */
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -80,6 +62,19 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ✅ NOUVEAU : Dashboard Directeur (Consultation uniquement) */}
+            <Route
+              path="/dashboard/directeur"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <Layout pageTitle="Dashboard Directeur">
+                    <DirecteurDashboardPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            
             <Route
               path="/maintenances"
               element={
@@ -126,6 +121,16 @@ function App() {
                 <ProtectedRoute isAuthenticated={isAuthenticated}>
                   <Layout pageTitle="Gestion des Régions">
                     <RegionsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/utilisateurs"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated}>
+                  <Layout pageTitle="Gestion des Utilisateurs">
+                    <UtilisateursPage />
                   </Layout>
                 </ProtectedRoute>
               }
