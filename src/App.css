@@ -29,3 +29,16 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Cacher le scrollbar du body et html */
+html, body {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+

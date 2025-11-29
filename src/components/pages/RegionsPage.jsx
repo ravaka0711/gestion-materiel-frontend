@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, X, AlertTriangle, MapPin, Eye } from 'lucide-react'
-import { 
-  getRegions, 
-  createRegion, 
-  updateRegion, 
-  deleteRegion 
+import {
+  getRegions,
+  createRegion,
+  updateRegion,
+  deleteRegion
 } from '../../services/api'
 
 
+
 // Modal, ConfirmDialog, RegionForm : inchangés
+
 
 
 function Modal({ isOpen, onClose, title, children, loading = false }) {
@@ -27,6 +29,7 @@ function Modal({ isOpen, onClose, title, children, loading = false }) {
     </div>
   )
 }
+
 
 function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, loading = false }) {
   if (!isOpen) return null
@@ -51,6 +54,7 @@ function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, loading = f
   )
 }
 
+
 function RegionForm({ initialData, onSubmit, loading, errors, mode, onCancel }) {
   const [formData, setFormData] = useState({ nom_region: initialData?.nom_region || '' })
   useEffect(() => {
@@ -63,7 +67,7 @@ function RegionForm({ initialData, onSubmit, loading, errors, mode, onCancel }) 
       {mode === 'edit' && initialData && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Région</label>
-          <input type="text" value={initialData.id_region} disabled className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"/>
+          <input type="text" value={initialData.id_region} disabled className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed" />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Généré automatiquement</p>
         </div>
       )}
@@ -90,10 +94,12 @@ function RegionForm({ initialData, onSubmit, loading, errors, mode, onCancel }) 
   )
 }
 
+
 export default function RegionsPage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   const isDirecteur = user.fonction === 'directeur'
   const isResponsable = user.fonction === 'responsable'
+
 
   const [regions, setRegions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -106,7 +112,9 @@ export default function RegionsPage() {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
 
+
   useEffect(() => { loadRegions() }, [])
+
 
   const loadRegions = async () => {
     setLoading(true)
@@ -115,14 +123,23 @@ export default function RegionsPage() {
     finally { setLoading(false) }
   }
 
-  const filteredRegions = regions.filter(region =>
+  // TRI CROISSANT PAR ID
+  const sortedRegions = [...regions].sort((a, b) => {
+    const idA = Number(a.id_region)
+    const idB = Number(b.id_region)
+    return idA - idB
+  })
+
+  const filteredRegions = sortedRegions.filter(region =>
     region.nom_region?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     region.id_region?.toString().includes(searchTerm)
   )
 
+
   const handleAdd = () => { setMode('create'); setSelectedRegion(null); setFormErrors({}); setIsModalOpen(true) }
   const handleEdit = (region) => { setMode('edit'); setSelectedRegion(region); setFormErrors({}); setIsModalOpen(true) }
   const handleDelete = (region) => { setSelectedRegion(region); setIsDeleteDialogOpen(true) }
+
 
   const validateForm = (formData) => {
     const errors = {}
@@ -131,7 +148,9 @@ export default function RegionsPage() {
     return errors
   }
 
+
   const showSuccess = (message) => { setSuccessMessage(message); setTimeout(() => setSuccessMessage(''), 3000) }
+
 
   const handleSubmit = async (formData) => {
     const errors = validateForm(formData)
@@ -152,6 +171,7 @@ export default function RegionsPage() {
     } finally { setSubmitLoading(false) }
   }
 
+
   const handleConfirmDelete = async () => {
     setSubmitLoading(true)
     try {
@@ -163,9 +183,11 @@ export default function RegionsPage() {
     } finally { setSubmitLoading(false) }
   }
 
+
   return (
     <div className="space-y-6">
       {isDirecteur}
+
 
       {successMessage && (
         <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
@@ -177,6 +199,7 @@ export default function RegionsPage() {
           </div>
         </div>
       )}
+
 
       <div className="flex items-center justify-between animate-slide-in-down">
         <div className="flex items-center gap-3">
@@ -201,6 +224,7 @@ export default function RegionsPage() {
         )}
       </div>
 
+
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 animate-slide-in-up">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -213,6 +237,7 @@ export default function RegionsPage() {
               text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-colors" />
         </div>
       </div>
+
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden animate-slide-in-up">
         {loading ? (
@@ -236,7 +261,7 @@ export default function RegionsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="relative" style={{maxHeight: "501px"}}>
+            <div className="relative" style={{ maxHeight: "calc(100vh - 360px)" }}>
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
@@ -255,7 +280,7 @@ export default function RegionsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto">
                   {filteredRegions.map((region, index) => (
-                    <tr 
+                    <tr
                       key={region.id_region}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors animate-fade-in"
                       style={{ animationDelay: `${index * 50}ms` }}
@@ -284,12 +309,17 @@ export default function RegionsPage() {
                       )}
                     </tr>
                   ))}
+                  {/* Ligne invisible pour ajouter de l'espace en bas */}
+                  <tr>
+                    <td colSpan={!isDirecteur ? "3" : "2"} className="bg-transparent"></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         )}
       </div>
+
 
       {/* Modals CRUD uniquement pour le responsable */}
       {!isDirecteur && (
@@ -309,6 +339,7 @@ export default function RegionsPage() {
             />
           </Modal>
 
+
           <ConfirmDialog
             isOpen={isDeleteDialogOpen}
             onClose={() => { setIsDeleteDialogOpen(false); setSelectedRegion(null) }}
@@ -319,6 +350,7 @@ export default function RegionsPage() {
           />
         </>
       )}
+
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

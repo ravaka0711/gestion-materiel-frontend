@@ -1,12 +1,10 @@
 import { Edit, Trash2, Building2 } from 'lucide-react';
 
-
 const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
   const formatDate = (date) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
   };
-
 
   return (
     <>
@@ -29,7 +27,6 @@ const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
           background: #94a3b8;
         }
 
-
         /* Scrollbar pour mode dark */
         .dark .table-scroll-body::-webkit-scrollbar-track {
           background: #1e293b;
@@ -43,17 +40,15 @@ const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
           background: #64748b;
         }
 
-
         .table-scroll-body {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
+          padding-bottom: 24px !important;
         }
-
 
         .dark .table-scroll-body {
           scrollbar-color: #475569 #1e293b;
         }
-
 
         /* Largeurs des colonnes */
         .header-table th:nth-child(1),
@@ -80,12 +75,16 @@ const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
         .body-table td:nth-child(5) {
           width: 180px;
         }
+
+        /* Padding supplémentaire pour la dernière ligne */
+        .body-table tbody tr:last-child td {
+          padding-bottom: 0.4rem;
+        }
       `}</style>
 
-
-      <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col" style={{ maxHeight: '450px' }}>
         {/* EN-TÊTE FIXE */}
-        <div className="overflow-hidden">
+        <div className="overflow-hidden flex-shrink-0">
           <table className="header-table min-w-full table-fixed">
             <thead className="bg-gray-100 dark:bg-gray-700/50">
               <tr className="border-b border-gray-200 dark:border-gray-600">
@@ -109,12 +108,10 @@ const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
           </table>
         </div>
 
-
-        {/* CORPS SCROLLABLE - S'adapte au contenu */}
+        {/* CORPS SCROLLABLE */}
         <div 
-          className="table-scroll-body" 
+          className="table-scroll-body flex-1" 
           style={{ 
-            maxHeight: '400px',
             overflowY: 'auto',
             overflowX: 'hidden'
           }}
@@ -177,6 +174,5 @@ const LogicielTable = ({ logiciels, onEdit, onDelete, onManageAgences }) => {
     </>
   );
 };
-
 
 export default LogicielTable;

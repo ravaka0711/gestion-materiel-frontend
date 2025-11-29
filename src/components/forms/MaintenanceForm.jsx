@@ -3,8 +3,10 @@ import { X } from 'lucide-react';
 import { getAgences, getMateriels, getUtilisateurs } from '../../services/api';
 import api from '../../services/api';
 
+
 const MaintenanceForm = ({ maintenance, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
+    id_maintenance: '',
     code_agence: '',
     id_materiel: '',
     id_logiciel: '',
@@ -19,6 +21,7 @@ const MaintenanceForm = ({ maintenance, onSubmit, onCancel }) => {
     solution_appliquee: ''
   });
 
+  const [autoGenerateId, setAutoGenerateId] = useState(true);
   const [agences, setAgences] = useState([]);
   const [materiels, setMateriels] = useState([]);
   const [logiciels, setLogiciels] = useState([]);
@@ -27,6 +30,24 @@ const MaintenanceForm = ({ maintenance, onSubmit, onCancel }) => {
   // États pour les listes filtrées
   const [filteredMateriels, setFilteredMateriels] = useState([]);
   const [filteredLogiciels, setFilteredLogiciels] = useState([]);
+
+  // Fonction pour générer un ID unique
+  const generateMaintenanceId = () => {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    return `MAINT-${timestamp}-${random}`;
+  };
+
+  // Générer l'ID automatiquement au chargement (mode création uniquement)
+  useEffect(() => {
+    if (!maintenance && autoGenerateId) {
+      setFormData(prev => ({
+        ...prev,
+        id_maintenance: generateMaintenanceId()
+      }));
+    }
+  }, [maintenance, autoGenerateId]);
+
 
  // Charger les données
 useEffect(() => {
@@ -93,7 +114,6 @@ useEffect(() => {
 }, []);
 
 
-
   // Filtrer les matériels et logiciels quand l'agence change
 useEffect(() => {
   if (formData.code_agence) {
@@ -125,10 +145,12 @@ useEffect(() => {
   }
 }, [formData.code_agence, materiels, logiciels]);
 
+
   // Pré-remplir le formulaire en mode édition
   useEffect(() => {
     if (maintenance) {
       setFormData({
+        id_maintenance: maintenance.id_maintenance || '',
         code_agence: maintenance.code_agence || '',
         id_materiel: maintenance.id_materiel || '',
         id_logiciel: maintenance.id_logiciel || '',
@@ -142,8 +164,10 @@ useEffect(() => {
         outils: maintenance.outils || '',
         solution_appliquee: maintenance.solution_appliquee || ''
       });
+      setAutoGenerateId(false); // Désactiver l'auto-génération en mode édition
     }
   }, [maintenance]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -161,6 +185,14 @@ useEffect(() => {
         id_logiciel: value,
         id_materiel: ''
       }));
+    } else if (name === 'type_intervention') {
+      // Réinitialiser numero_or et outils quand le type change
+      setFormData(prev => ({
+        ...prev,
+        type_intervention: value,
+        numero_or: value === 'par mission' ? prev.numero_or : '',
+        outils: value === 'à distance' ? prev.outils : ''
+      }));
     } else {
       setFormData(prev => ({
         ...prev,
@@ -174,13 +206,48 @@ useEffect(() => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
+  const handleAutoGenerateToggle = () => {
+    const newAutoGenerate = !autoGenerateId;
+    setAutoGenerateId(newAutoGenerate);
+    
+    if (newAutoGenerate && !maintenance) {
+      setFormData(prev => ({
+        ...prev,
+        id_maintenance: generateMaintenanceId()
+      }));
+    } else if (!newAutoGenerate) {
+      setFormData(prev => ({
+        ...prev,
+        id_maintenance: ''
+      }));
+    }
   };
 
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Nettoyer les données avant de les envoyer
+    const cleanedData = {
+      ...formData,
+      // Convertir les chaînes vides en null pour les champs optionnels
+      date_fin: formData.date_fin && formData.date_fin.trim() !== '' ? formData.date_fin : null,
+      numero_or: formData.numero_or && formData.numero_or.trim() !== '' ? formData.numero_or : null,
+      outils: formData.outils && formData.outils.trim() !== '' ? formData.outils : null,
+      solution_appliquee: formData.solution_appliquee && formData.solution_appliquee.trim() !== '' ? formData.solution_appliquee : null,
+      description: formData.description && formData.description.trim() !== '' ? formData.description : null,
+      // Convertir les chaînes vides en null pour id_materiel et id_logiciel
+      id_materiel: formData.id_materiel && formData.id_materiel !== '' ? formData.id_materiel : null,
+      id_logiciel: formData.id_logiciel && formData.id_logiciel !== '' ? formData.id_logiciel : null
+    };
+
+    console.log('📤 Données nettoyées à envoyer:', cleanedData);
+    onSubmit(cleanedData);
+  };
+
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 border-b border-blue-800">
@@ -196,10 +263,46 @@ useEffect(() => {
           </button>
         </div>
 
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(95vh-180px)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
+            {/* ID Maintenance */}
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  ID Maintenance *
+                </label>
+                {!maintenance && (
+                  <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={autoGenerateId}
+                      onChange={handleAutoGenerateToggle}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    Auto-générer
+                  </label>
+                )}
+              </div>
+              <input
+                type="text"
+                name="id_maintenance"
+                value={formData.id_maintenance}
+                onChange={handleChange}
+                disabled={autoGenerateId && !maintenance}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                placeholder={autoGenerateId ? "ID généré automatiquement" : "Saisir un ID unique"}
+              />
+              {!autoGenerateId && !maintenance && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  💡 Saisissez un ID unique pour cette maintenance
+                </p>
+              )}
+            </div>
+
             {/* Agence */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -220,6 +323,7 @@ useEffect(() => {
                 ))}
               </select>
             </div>
+
 
             {/* Matériel */}
             <div>
@@ -251,6 +355,7 @@ useEffect(() => {
               )}
             </div>
 
+
            {/* Logiciel */}
 <div>
   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -270,7 +375,7 @@ useEffect(() => {
     </option>
     {filteredLogiciels.map((logiciel, index) => (
       <option 
-        key={`${logiciel.id_logiciel}-${logiciel.code_agence}-${index}`}  // ⭐ Clé unique avec index
+        key={`${logiciel.id_logiciel}-${logiciel.code_agence}-${index}`}
         value={logiciel.id_logiciel}
       >
         {logiciel.nom_logiciel} (v{logiciel.version})
@@ -283,6 +388,7 @@ useEffect(() => {
     </p>
   )}
 </div>
+
 
 
             {/* Technicien */}
@@ -306,6 +412,7 @@ useEffect(() => {
               </select>
             </div>
 
+
             {/* Type d'intervention */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -325,6 +432,7 @@ useEffect(() => {
               </select>
             </div>
 
+
             {/* Date début */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -340,6 +448,7 @@ useEffect(() => {
               />
             </div>
 
+
             {/* Date fin */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -354,6 +463,7 @@ useEffect(() => {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
 
             {/* Status */}
             <div>
@@ -373,35 +483,42 @@ useEffect(() => {
               </select>
             </div>
 
-            {/* N° OR */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                N° OR
-              </label>
-              <input
-                type="text"
-                name="numero_or"
-                value={formData.numero_or}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                placeholder="Numéro d'ordre de réparation"
-              />
-            </div>
 
-            {/* Outils */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Outils utilisés
-              </label>
-              <input
-                type="text"
-                name="outils"
-                value={formData.outils}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Tournevis, multimètre..."
-              />
-            </div>
+            {/* N° OR - Affiché uniquement si type_intervention = "par mission" */}
+            {formData.type_intervention === 'par mission' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  N° OR
+                </label>
+                <input
+                  type="text"
+                  name="numero_or"
+                  value={formData.numero_or}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Numéro d'ordre de réparation"
+                />
+              </div>
+            )}
+
+
+            {/* Outils - Affiché uniquement si type_intervention = "à distance" */}
+            {formData.type_intervention === 'à distance' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Outils utilisés
+                </label>
+                <input
+                  type="text"
+                  name="outils"
+                  value={formData.outils}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: TeamViewer, AnyDesk..."
+                />
+              </div>
+            )}
+
 
             {/* Solution appliquée */}
             <div className="md:col-span-2">
@@ -418,6 +535,7 @@ useEffect(() => {
               />
             </div>
 
+
             {/* Description */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -433,6 +551,7 @@ useEffect(() => {
               />
             </div>
           </div>
+
 
           {/* Buttons */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -455,5 +574,6 @@ useEffect(() => {
     </div>
   );
 };
+
 
 export default MaintenanceForm;

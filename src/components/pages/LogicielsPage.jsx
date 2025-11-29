@@ -15,7 +15,6 @@ import {
   getAgences
 } from '../../services/api'
 
-
 const LogicielPage = () => {
   const [logiciels, setLogiciels] = useState([]);
   const [filteredLogiciels, setFilteredLogiciels] = useState([]);
@@ -31,13 +30,13 @@ const LogicielPage = () => {
   const [agencesForLogiciel, setAgencesForLogiciel] = useState([]);
   const [allAgences, setAllAgences] = useState([]);
 
-
   const fetchLogiciels = async () => {
     setLoading(true);
     try {
       const data = await getLogiciels();
-      setLogiciels(data);
-      setFilteredLogiciels(data);
+      const sortedData = [...data].sort((a, b) => b.id_logiciel - a.id_logiciel);
+      setLogiciels(sortedData);
+      setFilteredLogiciels(sortedData);
     } catch (error) {
       showNotification('Erreur lors du chargement des logiciels', 'error');
       console.error('Erreur:', error);
@@ -46,11 +45,9 @@ const LogicielPage = () => {
     }
   };
 
-
   useEffect(() => {
     fetchLogiciels();
   }, []);
-
 
   useEffect(() => {
     const filtered = logiciels.filter(logiciel => {
@@ -58,16 +55,11 @@ const LogicielPage = () => {
       
       const searchValue = searchTerm.trim();
       const logicielId = String(logiciel.id_logiciel);
-      
-      // Vérifie si c'est un nombre pur (uniquement des chiffres)
       const isPureNumber = /^\d+$/.test(searchValue);
       
       if (isPureNumber) {
-        // Si c'est un nombre, recherche UNIQUEMENT par ID exact
-        // Ne cherche PAS dans la version
         return logicielId === searchValue;
       } else {
-        // Si c'est du texte, recherche dans nom et version
         const matchesName = logiciel.nom_logiciel?.toLowerCase().includes(searchValue.toLowerCase());
         const matchesVersion = String(logiciel.version || '').toLowerCase().includes(searchValue.toLowerCase());
         return matchesName || matchesVersion;
@@ -76,15 +68,11 @@ const LogicielPage = () => {
     
     setFilteredLogiciels(filtered);
   }, [searchTerm, logiciels]);
-  
-  
-
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
-
 
   const handleSubmit = async (formData) => {
     try {
@@ -96,7 +84,6 @@ const LogicielPage = () => {
         showNotification('Logiciel créé avec succès');
       }
 
-
       setShowForm(false);
       setSelectedLogiciel(null);
       fetchLogiciels();
@@ -106,7 +93,6 @@ const LogicielPage = () => {
       console.error('Erreur:', error);
     }
   };
-
 
   const handleDelete = async () => {
     try {
@@ -122,24 +108,20 @@ const LogicielPage = () => {
     }
   };
 
-
   const handleEdit = (logiciel) => {
     setSelectedLogiciel(logiciel);
     setShowForm(true);
   };
-
 
   const handleDeleteClick = (logiciel) => {
     setSelectedLogiciel(logiciel);
     setShowDeleteDialog(true);
   };
 
-
   const handleCancel = () => {
     setShowForm(false);
     setSelectedLogiciel(null);
   };
-
 
   const handleManageAgences = async (logiciel) => {
     setSelectedLogicielForAgences(logiciel);
@@ -160,7 +142,6 @@ const LogicielPage = () => {
     }
   };
 
-
   const handleAgenceAdded = async (code_agence) => {
     try {
       await addAgenceToLogiciel(code_agence, selectedLogicielForAgences.id_logiciel);
@@ -174,7 +155,6 @@ const LogicielPage = () => {
       console.error('Erreur:', error);
     }
   };
-
 
   const handleAgenceRemoved = async (code_agence) => {
     try {
@@ -190,25 +170,8 @@ const LogicielPage = () => {
     }
   };
 
-
   return (
     <>
-      {/* Style pour masquer le scrollbar du navigateur */}
-      <style>{`
-        body::-webkit-scrollbar,
-        html::-webkit-scrollbar {
-          display: none;
-        }
-        
-        body,
-        html {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          overflow: hidden;
-        }
-      `}</style>
-
-      {/* Animation de notification */}
       <style>{`
         @keyframes slide-in-right {
           0% {
@@ -226,7 +189,7 @@ const LogicielPage = () => {
         }
       `}</style>
 
-      {/* Notification améliorée */}
+      {/* Notification */}
       {notification && (
         <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
           <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
@@ -248,73 +211,76 @@ const LogicielPage = () => {
         </div>
       )}
 
-      {/* Page FIXE sans scroll */}
-      <div className="h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-        <div className="h-full flex flex-col p-4">
+      {/* Conteneur principal avec espacement réduit */}
+      <div 
+        className="h-screen bg-gray-50 dark:bg-gray-900"
+        style={{ overflow: 'hidden' }}
+      >
+        <div className="h-full flex flex-col p-3">
           
-          {/* En-tête avec icône */}
-          <div className="flex items-center gap-3 mb-4 flex-shrink-0">
-            <div className="bg-blue-600 p-2.5 rounded-lg">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* En-tête compact */}
+          <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+            <div className="bg-blue-600 p-2 rounded-lg">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                 Gestion des Logiciels
               </h1>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {logiciels.length} logiciel{logiciels.length > 1 ? 's' : ''} affiché{logiciels.length > 1 ? 's' : ''}
+                {logiciels.length} logiciel{logiciels.length > 1 ? 's' : ''}
               </p>
             </div>
           </div>
 
-          {/* Barre d'actions */}
-          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-700 flex-shrink-0">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* Barre d'actions compacte */}
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-2 mb-2 border border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={16} />
                 <input
                   type="text"
                   placeholder="Rechercher par nom ou ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={fetchLogiciels}
                   disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
                 >
-                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
                   Actualiser
                 </button>
                 <button
                   onClick={() => setShowForm(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
                   Ajouter
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Statistiques */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 flex-shrink-0">
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total logiciels</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{logiciels.length}</p>
+          {/* Statistiques compactes */}
+          <div className="grid grid-cols-3 gap-2 mb-2 flex-shrink-0">
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">Total logiciels</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{logiciels.length}</p>
             </div>
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Résultats affichés</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{filteredLogiciels.length}</p>
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">Résultats affichés</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{filteredLogiciels.length}</p>
             </div>
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Recherche active</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{searchTerm ? 'Oui' : 'Non'}</p>
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-2 border border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">Recherche active</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">{searchTerm ? 'Oui' : 'Non'}</p>
             </div>
           </div>
 
@@ -343,7 +309,6 @@ const LogicielPage = () => {
             />
           )}
 
-          {/* ConfirmDialog avec correction du nesting HTML */}
           {showDeleteDialog && selectedLogiciel && (
             <ConfirmDialog
               isOpen={showDeleteDialog}
@@ -394,6 +359,5 @@ const LogicielPage = () => {
     </>
   );
 };
-
 
 export default LogicielPage;
